@@ -1,0 +1,181 @@
+import { createFileRoute } from "@tanstack/react-router"
+import { useState } from "react"
+import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
+
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { getWorklogsWithEarnings } from "@/data"
+
+const PAGE_SIZE = 10
+
+export const Route = createFileRoute("/_layout/")({
+  component: WorklogsPage,
+  loader: () => {
+    return { worklogs: getWorklogsWithEarnings() }
+  },
+})
+
+function WorklogsPage() {
+  const { worklogs } = Route.useLoaderData()
+  const [page, setPage] = useState(1)
+  const [startDate, setStartDate] = useState("")
+  const [endDate, setEndDate] = useState("")
+
+  const filtered = worklogs.filter((w) => {
+    const createdAt = new Date(w.createdAt)
+    if (startDate && createdAt < new Date(startDate)) return false
+    if (endDate && createdAt > new Date(endDate + "T23:59:59.999Z")) return false
+    return true
+  })
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const currentPage = Math.min(Math.max(1, page), totalPages)
+  const displayed = filtered.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  )
+
+  const handlePrev = () => {
+    if (currentPage > 1) setPage(currentPage - 1)
+  }
+
+  const handleNext = () => {
+    if (currentPage < totalPages) setPage(currentPage + 1)
+  }
+
+  const handlePageInput = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      const value = Number((e.target as HTMLInputElement).value)
+      if (value >= 1 && value <= totalPages) setPage(value)
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4">
+        <h1 className="text-2xl font-bold">Worklogs</h1>
+        <div className="flex gap-4 items-end">
+          <div className="flex flex-col gap-1">
+            <label htmlFor="startDate" className="text-sm text-muted-foreground">
+              Start Date
+            </label>
+            <Input
+              id="startDate"
+              type="date"
+              value={startDate}
+              onChange={(e) => {
+                setStartDate(e.target.value)
+                setPage(1)
+              }}
+              className="w-40"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label htmlFor="endDate" className="text-sm text-muted-foreground">
+              End Date
+            </label>
+            <Input
+              id="endDate"
+              type="date"
+              value={endDate}
+              onChange={(e) => {
+                setEndDate(e.target.value)
+                setPage(1)
+              }}
+              className="w-40"
+            />
+          </div>
+        </div>
+      </div>
+
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Task</TableHead>
+            <TableHead>Freelancer</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Total Earnings</TableHead>
+            <TableHead>Created At</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {displayed.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={5} className="text-center text-muted-foreground">
+                No worklogs found
+              </TableCell>
+            </TableRow>
+          ) : (
+            displayed.map((worklog) => (
+              <TableRow key={worklog.id}>
+                <TableCell className="font-medium">{worklog.task}</TableCell>
+                <TableCell>{worklog.freelancer?.name || "Unknown"}</TableCell>
+                <TableCell>
+                  <Badge
+                    variant={
+                      worklog.status === "paid"
+                        ? "secondary"
+                        : worklog.status === "approved"
+                          ? "outline"
+                          : "default"
+                    }
+                  >
+                    {worklog.status}
+                  </Badge>
+                </TableCell>
+                <TableCell>${worklog.totalEarnings.toFixed(2)}</TableCell>
+                <TableCell>{worklog.createdAt}</TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
+
+      {totalPages > 0 && (
+        <div className="flex items-center justify-center gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handlePrev}
+            disabled={currentPage === 1}
+            aria-label="Previous page"
+          >
+            <ChevronLeftIcon className="size-4" />
+          </Button>
+          <div className="flex items-center gap-2">
+            <Input
+              type="number"
+              min={1}
+              max={totalPages}
+              defaultValue={currentPage}
+              onKeyDown={handlePageInput}
+              className="w-16 text-center"
+              aria-label="Go to page"
+            />
+            <span className="text-sm text-muted-foreground">
+              of {totalPages}
+            </span>
+          </div>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleNext}
+            disabled={currentPage === totalPages}
+            aria-label="Next page"
+          >
+            <ChevronRightIcon className="size-4" />
+          </Button>
+        </div>
+      )}
+    </div>
+  )
+}

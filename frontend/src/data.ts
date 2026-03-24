@@ -17,12 +17,19 @@ export const getEntries = () => entriesData
 export const getEntriesByWorklogId = (worklogId: string) =>
   entriesData.filter((e) => e.worklogId === worklogId)
 
-export const getWorklogsByDateRange = (start: string, end: string) => {
-  const startDate = new Date(start)
-  const endDate = new Date(end)
+export const getWorklogsByDateRange = (start?: string, end?: string) => {
   return worklogsData.filter((w) => {
     const createdAt = new Date(w.createdAt)
-    return createdAt >= startDate && createdAt <= endDate
+    if (start && end) {
+      return createdAt >= new Date(start) && createdAt <= new Date(end)
+    }
+    if (start) {
+      return createdAt >= new Date(start)
+    }
+    if (end) {
+      return createdAt <= new Date(end)
+    }
+    return true
   })
 }
 
@@ -37,6 +44,15 @@ export const getTotalEarnings = (worklogId: string) => {
 
 export const getWorklogsWithEarnings = () => {
   return worklogsData.map((w) => ({
+    ...w,
+    totalEarnings: getTotalEarnings(w.id),
+    freelancer: getFreelancerById(w.freelancerId),
+  }))
+}
+
+export const getWorklogsByDateRangeWithEarnings = (start?: string, end?: string) => {
+  const filtered = getWorklogsByDateRange(start, end)
+  return filtered.map((w) => ({
     ...w,
     totalEarnings: getTotalEarnings(w.id),
     freelancer: getFreelancerById(w.freelancerId),
