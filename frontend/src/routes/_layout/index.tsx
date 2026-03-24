@@ -6,6 +6,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Table,
   TableBody,
   TableCell,
@@ -21,6 +28,7 @@ const searchSchema = z.object({
   page: z.coerce.number().int().positive().optional(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
+  status: z.enum(["pending", "approved", "paid"]).optional(),
 });
 
 export const Route = createFileRoute("/_layout/")({
@@ -41,11 +49,16 @@ function WorklogsPage() {
   const page = search.page ?? 1;
   const startDate = search.startDate ?? "";
   const endDate = search.endDate ?? "";
-  const hasFilters = Boolean(startDate || endDate);
+  const status = search.status ?? "";
+  const hasFilters = Boolean(startDate || endDate || status);
 
   const navigateWithParams = (updates: Partial<Search>) => {
     const newSearch = { ...search, ...updates };
-    if (updates.startDate !== undefined || updates.endDate !== undefined) {
+    if (
+      updates.startDate !== undefined ||
+      updates.endDate !== undefined ||
+      updates.status !== undefined
+    ) {
       newSearch.page = 1;
     }
     Object.keys(newSearch).forEach((key) => {
@@ -61,6 +74,7 @@ function WorklogsPage() {
     if (startDate && createdAt < new Date(startDate)) return false;
     if (endDate && createdAt > new Date(endDate + "T23:59:59.999Z"))
       return false;
+    if (status && w.status !== status) return false;
     return true;
   });
 
@@ -128,11 +142,41 @@ function WorklogsPage() {
               className="w-40"
             />
           </div>
+          <div className="flex flex-col gap-1">
+            <label htmlFor="status" className="text-sm text-muted-foreground">
+              Status
+            </label>
+            <Select
+              value={status}
+              onValueChange={(v) => {
+                if (v === "pending" || v === "approved" || v === "paid") {
+                  navigateWithParams({ status: v });
+                } else {
+                  navigateWithParams({ status: undefined });
+                }
+              }}
+            >
+              <SelectTrigger className="w-32" id="status">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="approved">Approved</SelectItem>
+                <SelectItem value="paid">Paid</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           {hasFilters && (
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigateWithParams({ startDate: "", endDate: "" })}
+              onClick={() =>
+                navigateWithParams({
+                  startDate: "",
+                  endDate: "",
+                  status: undefined,
+                })
+              }
             >
               <X className="size-4 mr-1" />
               Clear Filters
