@@ -1,7 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { z } from "zod";
 import { ChevronLeftIcon, ChevronRightIcon, ArrowLeft } from "lucide-react";
-import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,7 +46,7 @@ function WorklogDetailPage() {
   const { worklog, entries, freelancer } = Route.useLoaderData();
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
-  const [, setRefresh] = useState(0);
+  const router = useRouter();
 
   const handleBack = () => {
     if (window.history.length > 1) {
@@ -74,7 +73,7 @@ function WorklogDetailPage() {
 
   const handleApproveToggle = () => {
     setWorklogApproved(worklog.id, !isApproved);
-    setRefresh((n) => n + 1);
+    router.invalidate();
   };
 
   const page = search.page ?? 1;
