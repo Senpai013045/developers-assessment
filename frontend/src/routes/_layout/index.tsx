@@ -1,10 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router"
-import { useState } from "react"
-import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { z } from "zod";
+import { ChevronLeftIcon, ChevronRightIcon, X } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -12,52 +12,85 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { getWorklogsWithEarnings } from "@/data"
+} from "@/components/ui/table";
+import { getWorklogsWithEarnings } from "@/data";
 
-const PAGE_SIZE = 10
+const PAGE_SIZE = 5;
+
+const searchSchema = z.object({
+  page: z.coerce.number().int().positive().optional(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+});
 
 export const Route = createFileRoute("/_layout/")({
   component: WorklogsPage,
+  validateSearch: searchSchema,
   loader: () => {
-    return { worklogs: getWorklogsWithEarnings() }
+    return { worklogs: getWorklogsWithEarnings() };
   },
-})
+});
+
+type Search = z.infer<typeof searchSchema>;
 
 function WorklogsPage() {
-  const { worklogs } = Route.useLoaderData()
-  const [page, setPage] = useState(1)
-  const [startDate, setStartDate] = useState("")
-  const [endDate, setEndDate] = useState("")
+  const { worklogs } = Route.useLoaderData();
+  const search = Route.useSearch();
+  const navigate = Route.useNavigate();
+
+  const page = search.page ?? 1;
+  const startDate = search.startDate ?? "";
+  const endDate = search.endDate ?? "";
+  const hasFilters = Boolean(startDate || endDate);
+
+  const navigateWithParams = (updates: Partial<Search>) => {
+    const newSearch = { ...search, ...updates };
+    if (updates.startDate !== undefined || updates.endDate !== undefined) {
+      newSearch.page = 1;
+    }
+    Object.keys(newSearch).forEach((key) => {
+      if (!newSearch[key as keyof Search]) {
+        delete newSearch[key as keyof Search];
+      }
+    });
+    navigate({ search: newSearch });
+  };
 
   const filtered = worklogs.filter((w) => {
-    const createdAt = new Date(w.createdAt)
-    if (startDate && createdAt < new Date(startDate)) return false
-    if (endDate && createdAt > new Date(endDate + "T23:59:59.999Z")) return false
-    return true
-  })
+    const createdAt = new Date(w.createdAt);
+    if (startDate && createdAt < new Date(startDate)) return false;
+    if (endDate && createdAt > new Date(endDate + "T23:59:59.999Z"))
+      return false;
+    return true;
+  });
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
-  const currentPage = Math.min(Math.max(1, page), totalPages)
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const currentPage = Math.min(Math.max(1, page), totalPages);
   const displayed = filtered.slice(
     (currentPage - 1) * PAGE_SIZE,
     currentPage * PAGE_SIZE
-  )
+  );
 
   const handlePrev = () => {
-    if (currentPage > 1) setPage(currentPage - 1)
-  }
+    if (currentPage > 1) {
+      navigateWithParams({ page: currentPage - 1 });
+    }
+  };
 
   const handleNext = () => {
-    if (currentPage < totalPages) setPage(currentPage + 1)
-  }
+    if (currentPage < totalPages) {
+      navigateWithParams({ page: currentPage + 1 });
+    }
+  };
 
   const handlePageInput = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
-      const value = Number((e.target as HTMLInputElement).value)
-      if (value >= 1 && value <= totalPages) setPage(value)
+      const value = Number((e.target as HTMLInputElement).value);
+      if (value >= 1 && value <= totalPages) {
+        navigateWithParams({ page: value });
+      }
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -65,7 +98,10 @@ function WorklogsPage() {
         <h1 className="text-2xl font-bold">Worklogs</h1>
         <div className="flex gap-4 items-end">
           <div className="flex flex-col gap-1">
-            <label htmlFor="startDate" className="text-sm text-muted-foreground">
+            <label
+              htmlFor="startDate"
+              className="text-sm text-muted-foreground"
+            >
               Start Date
             </label>
             <Input
@@ -73,8 +109,7 @@ function WorklogsPage() {
               type="date"
               value={startDate}
               onChange={(e) => {
-                setStartDate(e.target.value)
-                setPage(1)
+                navigateWithParams({ startDate: e.target.value });
               }}
               className="w-40"
             />
@@ -88,12 +123,21 @@ function WorklogsPage() {
               type="date"
               value={endDate}
               onChange={(e) => {
-                setEndDate(e.target.value)
-                setPage(1)
+                navigateWithParams({ endDate: e.target.value });
               }}
               className="w-40"
             />
           </div>
+          {hasFilters && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigateWithParams({ startDate: "", endDate: "" })}
+            >
+              <X className="size-4 mr-1" />
+              Clear Filters
+            </Button>
+          )}
         </div>
       </div>
 
@@ -110,14 +154,25 @@ function WorklogsPage() {
         <TableBody>
           {displayed.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={5} className="text-center text-muted-foreground">
+              <TableCell
+                colSpan={5}
+                className="text-center text-muted-foreground"
+              >
                 No worklogs found
               </TableCell>
             </TableRow>
           ) : (
             displayed.map((worklog) => (
               <TableRow key={worklog.id}>
-                <TableCell className="font-medium">{worklog.task}</TableCell>
+                <TableCell className="font-medium">
+                  <Link
+                    to="/worklogs/$worklogId"
+                    params={{ worklogId: worklog.id }}
+                    className="hover:underline"
+                  >
+                    {worklog.task}
+                  </Link>
+                </TableCell>
                 <TableCell>{worklog.freelancer?.name || "Unknown"}</TableCell>
                 <TableCell>
                   <Badge
@@ -177,5 +232,5 @@ function WorklogsPage() {
         </div>
       )}
     </div>
-  )
+  );
 }

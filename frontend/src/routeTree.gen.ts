@@ -9,63 +9,58 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as PaymentReviewRouteImport } from './routes/payment-review'
+import { Route as LayoutRouteImport } from './routes/_layout'
 import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
-import { Route as WorklogsWorklogIdRouteImport } from './routes/worklogs/$worklogId'
+import { Route as LayoutWorklogsWorklogIdRouteImport } from './routes/_layout/worklogs/$worklogId'
 
-const PaymentReviewRoute = PaymentReviewRouteImport.update({
-  id: '/payment-review',
-  path: '/payment-review',
+const LayoutRoute = LayoutRouteImport.update({
+  id: '/_layout',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LayoutIndexRoute = LayoutIndexRouteImport.update({
-  id: '/_layout/',
+  id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => LayoutRoute,
 } as any)
-const WorklogsWorklogIdRoute = WorklogsWorklogIdRouteImport.update({
+const LayoutWorklogsWorklogIdRoute = LayoutWorklogsWorklogIdRouteImport.update({
   id: '/worklogs/$worklogId',
   path: '/worklogs/$worklogId',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => LayoutRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/payment-review': typeof PaymentReviewRoute
-  '/worklogs/$worklogId': typeof WorklogsWorklogIdRoute
   '/': typeof LayoutIndexRoute
+  '/worklogs/$worklogId': typeof LayoutWorklogsWorklogIdRoute
 }
 export interface FileRoutesByTo {
-  '/payment-review': typeof PaymentReviewRoute
-  '/worklogs/$worklogId': typeof WorklogsWorklogIdRoute
   '/': typeof LayoutIndexRoute
+  '/worklogs/$worklogId': typeof LayoutWorklogsWorklogIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/payment-review': typeof PaymentReviewRoute
-  '/worklogs/$worklogId': typeof WorklogsWorklogIdRoute
+  '/_layout': typeof LayoutRouteWithChildren
   '/_layout/': typeof LayoutIndexRoute
+  '/_layout/worklogs/$worklogId': typeof LayoutWorklogsWorklogIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/payment-review' | '/worklogs/$worklogId' | '/'
+  fullPaths: '/' | '/worklogs/$worklogId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/payment-review' | '/worklogs/$worklogId' | '/'
-  id: '__root__' | '/payment-review' | '/worklogs/$worklogId' | '/_layout/'
+  to: '/' | '/worklogs/$worklogId'
+  id: '__root__' | '/_layout' | '/_layout/' | '/_layout/worklogs/$worklogId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  PaymentReviewRoute: typeof PaymentReviewRoute
-  WorklogsWorklogIdRoute: typeof WorklogsWorklogIdRoute
-  LayoutIndexRoute: typeof LayoutIndexRoute
+  LayoutRoute: typeof LayoutRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/payment-review': {
-      id: '/payment-review'
-      path: '/payment-review'
-      fullPath: '/payment-review'
-      preLoaderRoute: typeof PaymentReviewRouteImport
+    '/_layout': {
+      id: '/_layout'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof LayoutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_layout/': {
@@ -73,22 +68,33 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof LayoutIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof LayoutRoute
     }
-    '/worklogs/$worklogId': {
-      id: '/worklogs/$worklogId'
+    '/_layout/worklogs/$worklogId': {
+      id: '/_layout/worklogs/$worklogId'
       path: '/worklogs/$worklogId'
       fullPath: '/worklogs/$worklogId'
-      preLoaderRoute: typeof WorklogsWorklogIdRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof LayoutWorklogsWorklogIdRouteImport
+      parentRoute: typeof LayoutRoute
     }
   }
 }
 
-const rootRouteChildren: RootRouteChildren = {
-  PaymentReviewRoute: PaymentReviewRoute,
-  WorklogsWorklogIdRoute: WorklogsWorklogIdRoute,
+interface LayoutRouteChildren {
+  LayoutIndexRoute: typeof LayoutIndexRoute
+  LayoutWorklogsWorklogIdRoute: typeof LayoutWorklogsWorklogIdRoute
+}
+
+const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutIndexRoute: LayoutIndexRoute,
+  LayoutWorklogsWorklogIdRoute: LayoutWorklogsWorklogIdRoute,
+}
+
+const LayoutRouteWithChildren =
+  LayoutRoute._addFileChildren(LayoutRouteChildren)
+
+const rootRouteChildren: RootRouteChildren = {
+  LayoutRoute: LayoutRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
