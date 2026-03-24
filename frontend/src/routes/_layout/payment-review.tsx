@@ -22,7 +22,6 @@ export const Route = createFileRoute("/_layout/payment-review")({
 
 function PaymentReviewPage() {
   const [excludedWorklogs, setExcludedWorklogs] = useState<Set<string>>(new Set())
-  const [excludedFreelancers, setExcludedFreelancers] = useState<Set<string>>(new Set())
   const [modalOpen, setModalOpen] = useState(false)
 
   const approvedWorklogIds = getApprovedWorklogs()
@@ -34,7 +33,7 @@ function PaymentReviewPage() {
   )
 
   const paymentWorklogs = approvedWorklogs.filter(
-    (w) => !excludedWorklogs.has(w.id) && !excludedFreelancers.has(w.freelancerId)
+    (w) => !excludedWorklogs.has(w.id)
   )
 
   const activeFreelancers = paymentWorklogs.reduce((acc, w) => {
@@ -56,13 +55,11 @@ function PaymentReviewPage() {
       .map((w) => w.id)
 
     setExcludedWorklogs((prev) => new Set([...prev, ...worklogsToExclude]))
-    setExcludedFreelancers((prev) => new Set([...prev, freelancerId]))
   }
 
   const handleConfirmPayment = () => {
     localStorage.removeItem("approvedWorklogs")
     setExcludedWorklogs(new Set())
-    setExcludedFreelancers(new Set())
   }
 
   const freelancerBreakdown = activeFreelancers.map((f) => {
