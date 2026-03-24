@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LayoutRouteImport } from './routes/_layout'
 import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
+import { Route as LayoutPaymentReviewRouteImport } from './routes/_layout/payment-review'
 import { Route as LayoutWorklogsWorklogIdRouteImport } from './routes/_layout/worklogs/$worklogId'
 
 const LayoutRoute = LayoutRouteImport.update({
@@ -22,6 +23,11 @@ const LayoutIndexRoute = LayoutIndexRouteImport.update({
   path: '/',
   getParentRoute: () => LayoutRoute,
 } as any)
+const LayoutPaymentReviewRoute = LayoutPaymentReviewRouteImport.update({
+  id: '/payment-review',
+  path: '/payment-review',
+  getParentRoute: () => LayoutRoute,
+} as any)
 const LayoutWorklogsWorklogIdRoute = LayoutWorklogsWorklogIdRouteImport.update({
   id: '/worklogs/$worklogId',
   path: '/worklogs/$worklogId',
@@ -29,25 +35,33 @@ const LayoutWorklogsWorklogIdRoute = LayoutWorklogsWorklogIdRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
+  '/payment-review': typeof LayoutPaymentReviewRoute
   '/': typeof LayoutIndexRoute
   '/worklogs/$worklogId': typeof LayoutWorklogsWorklogIdRoute
 }
 export interface FileRoutesByTo {
+  '/payment-review': typeof LayoutPaymentReviewRoute
   '/': typeof LayoutIndexRoute
   '/worklogs/$worklogId': typeof LayoutWorklogsWorklogIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_layout': typeof LayoutRouteWithChildren
+  '/_layout/payment-review': typeof LayoutPaymentReviewRoute
   '/_layout/': typeof LayoutIndexRoute
   '/_layout/worklogs/$worklogId': typeof LayoutWorklogsWorklogIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/worklogs/$worklogId'
+  fullPaths: '/payment-review' | '/' | '/worklogs/$worklogId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/worklogs/$worklogId'
-  id: '__root__' | '/_layout' | '/_layout/' | '/_layout/worklogs/$worklogId'
+  to: '/payment-review' | '/' | '/worklogs/$worklogId'
+  id:
+    | '__root__'
+    | '/_layout'
+    | '/_layout/payment-review'
+    | '/_layout/'
+    | '/_layout/worklogs/$worklogId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -70,6 +84,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutIndexRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/payment-review': {
+      id: '/_layout/payment-review'
+      path: '/payment-review'
+      fullPath: '/payment-review'
+      preLoaderRoute: typeof LayoutPaymentReviewRouteImport
+      parentRoute: typeof LayoutRoute
+    }
     '/_layout/worklogs/$worklogId': {
       id: '/_layout/worklogs/$worklogId'
       path: '/worklogs/$worklogId'
@@ -81,11 +102,13 @@ declare module '@tanstack/react-router' {
 }
 
 interface LayoutRouteChildren {
+  LayoutPaymentReviewRoute: typeof LayoutPaymentReviewRoute
   LayoutIndexRoute: typeof LayoutIndexRoute
   LayoutWorklogsWorklogIdRoute: typeof LayoutWorklogsWorklogIdRoute
 }
 
 const LayoutRouteChildren: LayoutRouteChildren = {
+  LayoutPaymentReviewRoute: LayoutPaymentReviewRoute,
   LayoutIndexRoute: LayoutIndexRoute,
   LayoutWorklogsWorklogIdRoute: LayoutWorklogsWorklogIdRoute,
 }

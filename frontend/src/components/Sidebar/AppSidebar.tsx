@@ -1,4 +1,4 @@
-import { ClipboardList } from "lucide-react";
+import { ClipboardList, DollarSign } from "lucide-react";
 
 import { Logo } from "@/components/Common/Logo";
 import {
@@ -9,7 +9,10 @@ import {
 } from "@/components/ui/sidebar";
 import { type Item, Main } from "./Main";
 
-const items: Item[] = [{ icon: ClipboardList, title: "Worklogs", path: "/" }];
+const items: Item[] = [
+  { icon: ClipboardList, title: "Worklogs", path: "/" },
+  { icon: DollarSign, title: "Payment Review", path: "/payment-review" },
+];
 
 export function AppSidebar() {
   return (
