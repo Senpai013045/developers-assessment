@@ -1,0 +1,26 @@
+[
+  {
+    "id": "fl-001",
+    "name": "Alice Johnson",
+    "email": "alice@example.com",
+    "hourlyRate": 75
+  },
+  {
+    "id": "fl-002",
+    "name": "Bob Smith",
+    "email": "bob@example.com",
+    "hourlyRate": 60
+  },
+  {
+    "id": "fl-003",
+    "name": "Carol Williams",
+    "email": "carol@example.com",
+    "hourlyRate": 85
+  },
+  {
+    "id": "fl-004",
+    "name": "David Brown",
+    "email": "david@example.com",
+    "hourlyRate": 55
+  }
+]
