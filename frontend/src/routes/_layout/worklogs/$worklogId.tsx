@@ -1,10 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { ChevronLeftIcon, ChevronRightIcon, ArrowLeft } from "lucide-react";
+import { useState } from "react";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { StatusBadge } from "@/components/Common/StatusBadge";
 import {
   Table,
   TableBody,
@@ -17,6 +18,8 @@ import {
   getEntriesByWorklogId,
   getFreelancerById,
   getWorklogById,
+  isWorklogApproved,
+  setWorklogApproved,
 } from "@/data";
 
 const PAGE_SIZE = 10;
@@ -44,20 +47,35 @@ function WorklogDetailPage() {
   const { worklog, entries, freelancer } = Route.useLoaderData();
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
+  const [, setRefresh] = useState(0);
+
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      navigate({ to: "/" });
+    }
+  };
 
   if (!worklog) {
     return (
       <div className="space-y-6">
-        <Link to="/">
-          <Button variant="ghost" size="sm">
-            <ArrowLeft className="size-4 mr-1" />
-            Back to Worklogs
-          </Button>
-        </Link>
+        <Button variant="ghost" size="sm" onClick={handleBack}>
+          <ArrowLeft className="size-4 mr-1" />
+          Back to Worklogs
+        </Button>
         <p className="text-muted-foreground">Worklog not found</p>
       </div>
     );
   }
+
+  const isPaid = worklog.status === "paid";
+  const isApproved = isWorklogApproved(worklog.id);
+
+  const handleApproveToggle = () => {
+    setWorklogApproved(worklog.id, !isApproved);
+    setRefresh((n) => n + 1);
+  };
 
   const page = search.page ?? 1;
   const totalPages = Math.max(1, Math.ceil(entries.length / PAGE_SIZE));
@@ -105,27 +123,31 @@ function WorklogDetailPage() {
 
   return (
     <div className="space-y-6">
-      <Link to="/">
-        <Button variant="ghost" size="sm">
-          <ArrowLeft className="size-4 mr-1" />
-          Back to Worklogs
-        </Button>
-      </Link>
+      <Button variant="ghost" size="sm" onClick={handleBack}>
+        <ArrowLeft className="size-4 mr-1" />
+        Back to Worklogs
+      </Button>
 
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">{worklog.task}</h1>
-          <Badge
-            variant={
-              worklog.status === "paid"
-                ? "secondary"
-                : worklog.status === "approved"
-                  ? "outline"
-                  : "default"
-            }
-          >
-            {worklog.status}
-          </Badge>
+          <div className="flex items-center gap-3">
+            <StatusBadge
+              status={worklog.status}
+              isLocallyApproved={isApproved}
+            />
+            {isPaid ? (
+              <Button variant="secondary" disabled>
+                Paid
+              </Button>
+            ) : isApproved ? (
+              <Button variant="destructive" onClick={handleApproveToggle}>
+                Unapprove
+              </Button>
+            ) : (
+              <Button onClick={handleApproveToggle}>Approve</Button>
+            )}
+          </div>
         </div>
 
         <div className="flex gap-6 text-sm">

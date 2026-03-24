@@ -2,9 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { z } from "zod";
 import { ChevronLeftIcon, ChevronRightIcon, X } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { StatusBadge } from "@/components/Common/StatusBadge";
 import {
   Select,
   SelectContent,
@@ -20,7 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { getWorklogsWithEarnings } from "@/data";
+import { getWorklogsWithEarnings, isWorklogApproved } from "@/data";
 
 const PAGE_SIZE = 5;
 
@@ -74,7 +74,11 @@ function WorklogsPage() {
     if (startDate && createdAt < new Date(startDate)) return false;
     if (endDate && createdAt > new Date(endDate + "T23:59:59.999Z"))
       return false;
-    if (status && w.status !== status) return false;
+    if (status) {
+      const locallyApproved = isWorklogApproved(w.id)
+      const effectiveStatus = locallyApproved || w.status === "approved" ? "approved" : w.status
+      if (effectiveStatus !== status) return false
+    }
     return true;
   });
 
@@ -219,17 +223,10 @@ function WorklogsPage() {
                 </TableCell>
                 <TableCell>{worklog.freelancer?.name || "Unknown"}</TableCell>
                 <TableCell>
-                  <Badge
-                    variant={
-                      worklog.status === "paid"
-                        ? "secondary"
-                        : worklog.status === "approved"
-                          ? "outline"
-                          : "default"
-                    }
-                  >
-                    {worklog.status}
-                  </Badge>
+                  <StatusBadge
+                    status={worklog.status}
+                    isLocallyApproved={isWorklogApproved(worklog.id)}
+                  />
                 </TableCell>
                 <TableCell>${worklog.totalEarnings.toFixed(2)}</TableCell>
                 <TableCell>{worklog.createdAt}</TableCell>

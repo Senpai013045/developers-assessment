@@ -58,3 +58,26 @@ export const getWorklogsByDateRangeWithEarnings = (start?: string, end?: string)
     freelancer: getFreelancerById(w.freelancerId),
   }))
 }
+
+export const getApprovedWorklogs = (): string[] => {
+  return JSON.parse(localStorage.getItem("approvedWorklogs") || "[]")
+}
+
+export const isWorklogApproved = (worklogId: string): boolean => {
+  return getApprovedWorklogs().includes(worklogId)
+}
+
+export const setWorklogApproved = (worklogId: string, approved: boolean) => {
+  const approvedWorklogs = getApprovedWorklogs()
+  if (approved) {
+    if (!approvedWorklogs.includes(worklogId)) {
+      approvedWorklogs.push(worklogId)
+    }
+  } else {
+    const index = approvedWorklogs.indexOf(worklogId)
+    if (index > -1) {
+      approvedWorklogs.splice(index, 1)
+    }
+  }
+  localStorage.setItem("approvedWorklogs", JSON.stringify(approvedWorklogs))
+}
